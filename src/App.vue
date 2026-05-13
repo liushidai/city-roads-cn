@@ -3,13 +3,13 @@
   <div id="app">
     <div v-if='placeFound'>
       <div class='controls'>
-        <a href="#" class='print-button' @click.prevent='toggleSettings'>Customize...</a>
-        <a href="#" class='try-another' @click.prevent='startOver'>Try another city</a>
+        <a href="#" class='print-button' @click.prevent='toggleSettings'>{{ $t('app.customize') }}</a>
+        <a href="#" class='try-another' @click.prevent='startOver'>{{ $t('app.tryAnother') }}</a>
       </div>
       <div v-if='showSettings' class='print-window'>
-        <h3>Display</h3>
+        <h3>{{ $t('app.display') }}</h3>
         <div class='row'>
-          <div class='col'>Colors</div>
+          <div class='col'>{{ $t('app.colors') }}</div>
           <div class='col colors c-2'>
             <div v-for='layer in layers' :key='layer.name' class='color-container'>
               <color-picker v-model='layer.color' @change='layer.changeColor'></color-picker>
@@ -18,34 +18,18 @@
           </div>
         </div>
 
-        <h3>Export</h3>
+        <h3>{{ $t('app.export') }}</h3>
         <div class='row'>
-          <a href='#' @click.prevent='zazzleMugPrint()' class='col'>Onto a mug</a> 
+          <a href='#'  @click.prevent='toPNGFile' class='col'>{{ $t('app.exportImage.title') }}</a> 
           <span class='col c-2'>
-            Print what you see onto a mug. <br/>Get a unique gift of your favorite city.
-          </span>
-        </div>
-        <div class='preview-actions message' v-if='zazzleLink || generatingPreview'>
-            <div v-if='zazzleLink' class='padded popup-help'>
-              If your browser has blocked the new window, <br/>please <a :href='zazzleLink' target='_blank'>click here</a>
-              to open it.
-            </div>
-            <div v-if='generatingPreview' class='loading-container'>
-              <loading-icon></loading-icon>
-              Generating preview url...
-            </div>
-        </div>
-        <div class='row'>
-          <a href='#'  @click.prevent='toPNGFile' class='col'>As an image (.png)</a> 
-          <span class='col c-2'>
-            Save the current screen as a raster image.
+            {{ $t('app.exportImage.description') }}
           </span>
         </div>
         
         <div class='row'>
-          <a href='#'  @click.prevent='toSVGFile' class='col'>As a vector (.svg)</a> 
+          <a href='#'  @click.prevent='toSVGFile' class='col'>{{ $t('app.exportSVG.title') }}</a> 
           <span class='col c-2'>
-            Save the current screen as a vector image.
+            {{ $t('app.exportSVG.description') }}
           </span>
         </div>
         <div v-if='false' class='row'>
@@ -55,23 +39,16 @@
           </span>
         </div>
 
-        <h3>About</h3>
+        <h3>{{ $t('app.about') }}</h3>
         <div>
-          <p>This website was created by <a href='https://twitter.com/anvaka' target='_blank'>@anvaka</a>.
-          It downloads roads from OpenStreetMap and renders them with WebGL.
-          </p>
-          <p>
-           You can find the entire <a href='https://github.com/anvaka/city-roads'>source code here</a>. 
-           If you love this website you can also <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a> or 
-           <a href='https://www.patreon.com/anvaka'>support me on Patreon</a>, but you don't have to.
-          </p>
+          <p>{{ $t('app.aboutDescPrefix') }}<a href='https://github.com/anvaka/city-roads' target='_blank'>@anvaka</a>{{ $t('app.aboutDescSuffix') }}</p>
         </div>
       </div>
     </div>
   </div>
 
   <editable-label v-if='placeFound' v-model='name' class='city-name' :printable='true' :style='{color: labelColorRGBA}' :overlay-manager='overlayManager'></editable-label>
-  <div v-if='placeFound' class='license printable can-drag' :style='{color: labelColorRGBA}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: labelColorRGBA}'>© OpenStreetMap</a></div>
+  <div v-if='placeFound' class='license printable can-drag' :style='{color: labelColorRGBA}'>{{ $t('app.dataLicensePrefix') }}<a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: labelColorRGBA}'>{{ $t('app.dataLicenseLinkText') }}</a></div>
 </template>
 
 <script>
@@ -81,7 +58,6 @@ import EditableLabel from './components/EditableLabel.vue';
 import ColorPicker from './components/ColorPicker.vue';
 import createScene from './lib/createScene.js';
 import GridLayer from './lib/GridLayer.js';
-import generateZazzleLink from './lib/getZazzleLink.js';
 import appState from './lib/appState.js';
 import {getPrintableCanvas, getCanvas} from './lib/saveFile.js';
 import config from './config.js';
@@ -110,8 +86,6 @@ export default {
     return {
       placeFound: false,
       name: '',
-      zazzleLink: null,
-      generatingPreview: false,
       showSettings: false,
       settingsOpen: false,
       labelColor: config.getLabelColor().toRgb(),
@@ -226,8 +200,8 @@ export default {
       });
 
       newLayers.push(
-        new ColorLayer('background', this.backgroundColor, this.setBackgroundColor),
-        new ColorLayer('labels', this.labelColor, newColor => this.labelColor = newColor)
+        new ColorLayer(this.$t('layers.background'), this.backgroundColor, this.setBackgroundColor),
+        new ColorLayer(this.$t('layers.labels'), this.labelColor, newColor => this.labelColor = newColor)
       );
 
       this.layers = newLayers;
@@ -255,27 +229,6 @@ export default {
       this.scene.background = c;
       document.body.style.backgroundColor = toRGBA(c);
       this.zazzleLink = null;
-    },
-
-    zazzleMugPrint() {
-      if (this.zazzleLink) {
-        window.open(this.zazzleLink, '_blank');
-        recordOpenClick(this.zazzleLink);
-        return;
-      }
-
-      this.generatingPreview = true;
-      getPrintableCanvas(this.scene).then(printableCanvas => {
-        generateZazzleLink(printableCanvas).then(link => {
-          this.zazzleLink = link;
-          window.open(link, '_blank');
-          recordOpenClick(link);
-          this.generatingPreview = false;
-        }).catch(e => {
-          this.error = e;
-          this.generatingPreview = false;
-        });
-      });
     }
   }
 }
@@ -283,17 +236,7 @@ export default {
 function toRGBA(c) {
     return `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
 }
-
-function recordOpenClick(link) {
-  if (typeof gtag === 'undefined') return;
-
-  gtag('event', 'click', {
-    'event_category': 'Outbound Link',
-    'event_label': link
-  });
-}
 </script>
-
 <style lang='stylus'>
 @import('./vars.styl');
 

@@ -6,6 +6,7 @@ import {isWebGLEnabled} from 'w-gl';
 import App from './App.vue';
 import NoWebGL from './NoWebGL.vue';
 import Query from './lib/Query.js';
+import i18n from './i18n/index.js';
 
 // const wgl = require('w-gl');
 
@@ -16,9 +17,9 @@ window.requireModule = d3Require;
 window.Query = Query;
 
 if (isWebGLEnabled(document.querySelector('#canvas'))) {
-  createApp(App).mount('#host');
+  createApp(App).use(i18n).mount('#host');
 } else {
-  createApp(NoWebGL).mount('#host');
+  createApp(NoWebGL).use(i18n).mount('#host');
 }
 
 function logError(e) {

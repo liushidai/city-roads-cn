@@ -1,12 +1,9 @@
 <template>
   <div class='absolute no-webgl'>
-    <h3>WebGL is not enabled :(</h3>
-    <p>This website renders millions of roads at once.</p>
-    <p>
-      To render this amount of data fast, the website uses <a href='https://get.webgl.org/'>WebGL</a>,
-      which seem to be not supported by the device that you are using.
-    </p>
-    <p>Please try a different device to play with this website</p>
+    <h3>{{ $t('nowebgl.title') }}</h3>
+    <p>{{ $t('nowebgl.desc1') }}</p>
+    <p>{{ $t('nowebgl.desc2Prefix') }}<a href='https://get.webgl.org/'>{{ $t('nowebgl.desc2LinkText') }}</a>{{ $t('nowebgl.desc2Suffix') }}</p>
+    <p>{{ $t('nowebgl.desc3') }}</p>
     <img src="https://i.imgur.com/Fbbe5a6.png" alt="demo">
   </div>
 </template>

@@ -1,21 +1,21 @@
 <template>
 <div class='find-place' :class='{centered: boxInTheMiddle }'>
   <div v-if='boxInTheMiddle'>
-    <h3 class='site-header'>city roads</h3>
-    <p class='description'>This website renders every single road within a city</p>
+    <h3 class='site-header'>{{ $t('site.title') }}</h3>
+    <p class='description'>{{ $t('site.description') }}</p>
   </div>
   <form v-on:submit.prevent="onSubmit" class='search-box'>
-      <input class='query-input' v-model='enteredInput' type='text' placeholder='Enter a city name to start' ref='input'>
+      <input class='query-input' v-model='enteredInput' type='text' :placeholder="$t('search.placeholder')" ref='input'>
       <a type='submit' class='search-submit' href='#' @click.prevent='onSubmit' v-if='enteredInput && !hideInput'>{{mainActionText}}</a>
   </form>
   <div v-if='showWarning' class='prompt message note shadow'>
-    Note: Large cities may require 200MB+ of data transfer and may need a powerful device to render.
+    {{ $t('warning.largeCity') }}
   </div>
   <div class='results' v-if='!loading'>
     <div v-if='suggestionsLoaded && suggestions.length' class='suggestions shadow'>
       <div class='prompt message'>
-        <div>Select boundaries below to download all roads within</div>
-        <div class='note'>large cities may require 200MB+ of data transfer and a powerful device</div>
+        <div>{{ $t('suggestion.select') }}</div>
+        <div class='note'>{{ $t('suggestion.largeCityNote') }}</div>
       </div>
       <ul>
         <li v-for='(suggestion, index) in suggestions' :key="index">
@@ -29,41 +29,41 @@
       </ul>
     </div>
     <div v-if='suggestionsLoaded && !suggestions.length && !loading && !error' class='no-results message shadow'>
-      Didn't find matching cities. Try a different query?
+      {{ $t('noResults') }}
     </div>
     <div v-if='noRoads' class='no-results message shadow'>
-      Didn't find any roads. Try a different query?
+      {{ $t('noRoads') }}
     </div>
   </div>
-  <div v-if='error' class='error message shadow'>
-    <div v-if='isServerError(error)'>
-      <div>OpenStreetMap servers are busy or temporarily unavailable.</div>
-      <div class='error-note'>We tried {{error.serversAttempted || 'multiple'}} servers but none responded in time. This usually resolves within a few minutes.</div>
-      <div class='error-actions'>
-        <a href='#' @click.prevent="retry" class='retry-btn'>Retry</a>
+    <div v-if='error' class='error message shadow'>
+      <div v-if='isServerError(error)'>
+        <div>{{ $t('error.serverBusy') }}</div>
+        <div class='error-note'>{{ $t('error.serverBusyNote') }}</div>
+        <div class='error-actions'>
+          <a href='#' @click.prevent="retry" class='retry-btn'>{{ $t('error.retry') }}</a>
+        </div>
+      </div>
+      <div v-else>
+        <div>{{ $t('error.general') }}</div>
+        <div class='error-note'>{{error.message || error.toString()}}</div>
+        <div class='error-actions'>
+          <a href='#' @click.prevent="retry" class='retry-btn'>{{ $t('error.retry') }}</a>
+        </div>
+        <div class='error-links'>
+          <a href='https://twitter.com/anvaka/status/1218971717734789120' :title='$t("error.seeDemo")' target="_blank">{{ $t('error.seeDemo') }}</a>
+          <a :href='getBugReportURL(error)' :title='"report error: " + error' target='_blank'>{{ $t('error.reportBug') }}</a>
+        </div>
       </div>
     </div>
-    <div v-else>
-      <div>Sorry, something went wrong while loading data.</div>
-      <div class='error-note'>{{error.message || error.toString()}}</div>
-      <div class='error-actions'>
-        <a href='#' @click.prevent="retry" class='retry-btn'>Retry</a>
-      </div>
-      <div class='error-links'>
-        <a href='https://twitter.com/anvaka/status/1218971717734789120' title='see what it supposed to do' target="_blank">see how it should have worked</a>
-        <a :href='getBugReportURL(error)' :title='"report error: " + error' target='_blank'>report this bug</a>
-      </div>
-    </div>
-  </div>
   <div v-if='loading' class='loading message shadow'>
     <loading-icon></loading-icon>
     <span>{{loading}}</span>
-    <a href="#" @click.prevent='cancelRequest' class='cancel-request'>cancel</a>
+    <a href="#" @click.prevent='cancelRequest' class='cancel-request'>{{ $t('loading.cancel') }}</a>
     <div class='load-padding' v-if='stillLoading > 0'>
-      Still loading...
+      {{ $t('loading.still') }}
     </div>
     <div class='load-padding' v-if='stillLoading > 1'>
-      Sorry it takes so long!
+      {{ $t('loading.sorrySlow') }}
     </div>
   </div>
 </div>
@@ -83,7 +83,7 @@ import LoadOptions from '../lib/LoadOptions.js';
 import Pbf from 'pbf';
 import {place} from '../proto/place.js';
 
-const FIND_TEXT = 'Find City Bounds';
+const FIND_TEXT = 'search.find';
 
 export default {
   name: 'FindPlace',
@@ -106,14 +106,14 @@ export default {
       noRoads: false,
       clicked: false,
       showWarning: hasValidArea, 
-      mainActionText: hasValidArea ? 'Download Area' : FIND_TEXT,
+      mainActionText: hasValidArea ? this.$t('search.download') : this.$t(FIND_TEXT),
       suggestions: []
     }
   },
   watch: {
     enteredInput() {
       // As soon as they change it, we need not to download:
-      this.mainActionText = FIND_TEXT;
+      this.mainActionText = this.$t(FIND_TEXT);
       this.showWarning = false;
       this.hideInput = false;
       appState.unsetPlace();
@@ -144,7 +144,7 @@ export default {
         return;
       }
 
-      this.loading = 'Searching cities that match your query...'
+      this.loading = this.$t('loading.searching')
       findBoundaryByName(this.enteredInput)
         .then(suggestions => {
           this.loading = null;
@@ -188,14 +188,19 @@ export default {
       this.stillLoading = 0;
       clearInterval(this.notifyStillLoading);
       if (status.loaded < 0) {
-        this.loading = 'Trying a different server'
+        this.loading = this.$t('loading.switchingServer')
         this.restartLoadingMonitor();
         return;
       }
       if (status.percent !== undefined) {
-        this.loading = 'Loaded ' + Math.round(100 * status.percent) + '% (' + formatNumber(status.loaded) + ' bytes)...';
+        this.loading = this.$t('loading.progress', {
+          percent: Math.round(100 * status.percent),
+          loaded: formatNumber(status.loaded)
+        });
       } else {
-        this.loading = 'Loaded ' + formatNumber(status.loaded) + ' bytes...';
+        this.loading = this.$t('loading.progressBytes', {
+          loaded: formatNumber(status.loaded)
+        });
       }
     },
 
@@ -231,7 +236,7 @@ export default {
     },
 
     checkCache(suggestion) {
-      this.loading = 'Checking cache...'
+      this.loading = this.$t('loading.checkingCache')
       let areaId = suggestion.areaId;
 
       return request(config.areaServer + '/' + areaId + '.pbf', {
@@ -249,7 +254,7 @@ export default {
     },
 
     useOSM(suggestion) {
-      this.loading = 'Connecting to OpenStreetMap...'
+      this.loading = this.$t('loading.connectingOSM')
       
       // it may take a while to load data. 
       this.restartLoadingMonitor();
