@@ -1,5 +1,7 @@
 # city-roads
 
+> 本项目基于 [anvaka/city-roads](https://github.com/anvaka/city-roads) 进行改进，添加了中英双语支持、界面优化及其他功能增强。
+
 Render every single road in any city at once: https://anvaka.github.io/city-roads/
 
 ![demo](https://i.imgur.com/6bFhX3e.png)
