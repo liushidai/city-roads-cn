@@ -1,8 +1,8 @@
 
 <template>
-<div class='vue-colorpicker' @click='showPicker = true' v-click-outside='hide' >
+<div class='vue-colorpicker' @click='togglePicker' ref='container'>
   <span class='vue-colorpicker-btn' :style='btnStyle' ref='triggerButton'></span>
-  <div class='vue-colorpicker-panel' v-show='showPicker' :style="{left: panelLeft, top: panelTop}">
+  <div class='vue-colorpicker-panel' v-show='showPicker' ref='panel' @click.stop>
     <component :is='pickerType' :modelValue='colors' @update:modelValue='changeColor'></component>
   </div>
 </div>
@@ -11,14 +11,14 @@
 <script>
 import tinycolor from 'tinycolor2'
 import Sketch from './vue3-color/Sketch.vue'
-import ClickOutside from './clickOutside.js'
+
 
 export default {
   name: 'vue-colorpicker',
   components: {
     'sketch-picker': Sketch,
   },
-  directives: { ClickOutside },
+
   props: {
     modelValue: {
       type: Object,
@@ -33,8 +33,6 @@ export default {
         a: 1
       },
       colorValue: '#FFFFFF',
-      panelLeft: '0px',
-      panelTop: '0px'
     }
   },
   computed: {
@@ -65,29 +63,25 @@ export default {
         this.updateColorObject(val);
       }
     },
-    showPicker(newVal) {
-      if (!newVal) return;
-
-      const PICKER_WIDTH = 220;
-      const PANEL_HEIGHT = 320;
-      let triggerRect = this.$refs.triggerButton.getBoundingClientRect();
-      let desiredLeft = triggerRect.x;
-      let desiredTop = triggerRect.bottom;
-      if (triggerRect.y + PANEL_HEIGHT > window.innerHeight) {
-        desiredTop = Math.max(0, window.innerHeight - PANEL_HEIGHT);
-        desiredLeft += 36; // so that the selector button is still visible;
-      }
-      if (desiredLeft + PICKER_WIDTH > window.innerWidth) {
-        desiredLeft = Math.max(0, window.innerWidth - PICKER_WIDTH);
-      } 
-      this.panelLeft = desiredLeft + 'px';
-      this.panelTop = desiredTop + 'px';
-    }
   },
 
   methods: {
-    hide () {
-      this.showPicker = false;
+    togglePicker () {
+      this.showPicker = !this.showPicker;
+      if (this.showPicker) {
+        // 延迟添加点击外部监听，避免立即触发
+        setTimeout(() => {
+          document.addEventListener('click', this.handleClickOutside, true);
+        }, 0);
+      }
+    },
+    handleClickOutside (e) {
+      const container = this.$refs.container;
+      const panel = this.$refs.panel;
+      if (container && !container.contains(e.target)) {
+        this.showPicker = false;
+        document.removeEventListener('click', this.handleClickOutside, true);
+      }
     },
     changeColor (data) {
       this.colorValue = data.rgba;
@@ -119,6 +113,9 @@ export default {
   },
   mounted () {
     this.updateColorObject(this.modelValue);
+  },
+  beforeUnmount () {
+    document.removeEventListener('click', this.handleClickOutside, true);
   }
 }
 </script>
@@ -129,6 +126,7 @@ export default {
   box-sizing: border-box;
   font-size: 0;
   cursor: pointer;
+  position: relative;
   &-btn {
     display: inline-block;
     width: 30px;
@@ -139,7 +137,14 @@ export default {
 
   .vue-colorpicker-panel {
     position: absolute;
-    z-index: 1;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    margin-left: -8px;
+    z-index: 10000;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: 4px;
   }
 }
 </style>

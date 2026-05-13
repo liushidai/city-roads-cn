@@ -502,7 +502,7 @@ a:focus {
 }
 .print-window {
   max-height: calc(100vh - 48px);
-  overflow-y: auto;
+  overflow-y: visible;
   border-top: 1px solid border-color;
   background: #f8f9fa;
   box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
