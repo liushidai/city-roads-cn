@@ -60,6 +60,7 @@ export default {
   layers: {
     background: 'background',
     labels: 'labels',
+    lines: 'lines {number}',
   },  nowebgl: {
     title: 'WebGL is not enabled :(',
     desc1: 'This website renders millions of roads at once.',

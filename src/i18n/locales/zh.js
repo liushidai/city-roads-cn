@@ -60,6 +60,7 @@ export default {
   layers: {
     background: '背景',
     labels: '文字',
+    lines: '线条 {number}',
   },  nowebgl: {
     title: '未启用 WebGL :(',
     desc1: '本网站会渲染数百万条道路。',
